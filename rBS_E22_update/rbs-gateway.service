@@ -1,0 +1,40 @@
+[Unit]
+Description=rBS LoRa Gateway - VEDC 2026
+Documentation=man:systemd.service(5)
+After=local-fs.target
+ConditionPathExists=/home/pi5/rBS_AIOT/rbs_gateway.py
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=pi5
+WorkingDirectory=/home/pi5/rBS_AIOT
+
+Environment=PYTHONUNBUFFERED=1
+Environment=RBS_STM_UART=/dev/serial0
+Environment=RBS_STM_BAUD=1000000
+Environment=RBS_BUILD_TAG=V2C5_2_JAM_LEASE_DISTRIBUTION_SIM
+Environment=RBS_SYSTEMD_MAIN_STALL_S=12
+Environment=RBS_JAM_DRYRUN=1
+
+ExecStartPre=/bin/sleep 2
+ExecStart=/home/pi5/rBS_AIOT/.venv/bin/python3 /home/pi5/rBS_AIOT/rbs_gateway.py
+
+# Crash/exception -> restart.
+Restart=always
+RestartSec=2
+
+# Process vẫn còn nhưng main loop bị treo -> restart.
+WatchdogSec=30s
+WatchdogSignal=SIGKILL
+NotifyAccess=main
+
+# Không để stop/restart bị mắc vô hạn.
+TimeoutStopSec=5s
+KillMode=control-group
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
